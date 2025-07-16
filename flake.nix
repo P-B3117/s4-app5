@@ -15,7 +15,7 @@
       buildPhase = ''
         mkdir -p bin
         javac -d bin $(find . -name "*.java")
-        jar cvfm AnalLex.jar manifest.txt -C bin app6
+        jar cvfm AnalLex.jar manifest.txt -C bin src
       '';
 
       installPhase = ''
@@ -40,7 +40,7 @@
       buildPhase = ''
         mkdir -p bin
         javac -d bin $(find . -name "*.java")
-        jar cvfm AnalLex.jar manifest.txt -C bin app6
+        jar cvfm AnalLex.jar manifest.txt -C bin src
       '';
 
       installPhase = ''

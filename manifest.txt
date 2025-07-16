@@ -1,1 +1,1 @@
-Main-Class: app6.AnalLex
+Main-Class: src.AnalLex
