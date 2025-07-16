@@ -1,5 +1,7 @@
 package src.ast;
 
+import src.Terminal;
+
 /** @author Ahmed Khoumsi */
 
 /** Classe representant une feuille d'AST
@@ -10,7 +12,7 @@ public class NoeudAST extends ElemAST {
 
     /** Constructeur pour l'initialisation d'attributs
      */
-    public NoeudAST() {
+    public NoeudAST(Operateur op) {
         // avec arguments
         //
     }
@@ -25,5 +27,32 @@ public class NoeudAST extends ElemAST {
      */
     public String LectAST() {
         return "";
+    }
+}
+
+enum Operateur {
+    Addition("+"),
+    Soustraction("-"),
+    Multiplication("*"),
+    Division("/");
+
+    private String symbol;
+
+    Operateur(String symbol) {
+        this.symbol = symbol;
+    }
+
+    public String getSymbol() {
+        return symbol;
+    }
+
+    public static Operateur fromToken(Terminal token) {
+        for (Operateur op : values()) {
+            if (op.getSymbol().equals(token.toString())) {
+                return op;
+            }
+        }
+
+        return null;
     }
 }

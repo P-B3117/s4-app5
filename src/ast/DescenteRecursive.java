@@ -1,6 +1,6 @@
-package src;
+package src.ast;
 
-import src.ast.ElemAST;
+import src.AnalLex;
 
 /** @author Ahmed Khoumsi */
 
@@ -15,7 +15,16 @@ public class DescenteRecursive {
       - pour l'initalisation d'attribut(s)
  */
     public DescenteRecursive(String in) {
-        //
+        AnalLex lex = new AnalLex(in);
+        ElemAST ast = null;
+
+        while (lex.resteTerminal()) {
+            var token = lex.prochainTerminal();
+
+            if (token.isOperator()) {
+                ast = new NoeudAST(Operateur.fromToken(token));
+            }
+        }
     }
 
     /** AnalSynt() effectue l'analyse syntaxique et construit l'AST.
