@@ -1,6 +1,7 @@
 package src;
 
-/** @author Ahmed Khoumsi */
+import java.util.ArrayList;
+import java.util.StringJoiner;
 
 /** Cette classe effectue l'analyse lexicale
  */
@@ -8,7 +9,7 @@ public class AnalLex {
 
     // Attributs
     private String chaine;
-    private String output;
+    public ArrayList<Terminal> output = new ArrayList<>();
 
     /** Constructeur pour l'initialisation d'attribut(s)
      */
@@ -24,9 +25,9 @@ public class AnalLex {
         while (this.resteTerminal()) {
             t = this.prochainTerminal();
             toWrite += t.toString() + "\n"; // toWrite contient le resultat
+            output.add(t);
         } //    d'analyse lexicale
         System.out.println(toWrite); // Ecriture de toWrite sur la console
-        output = toWrite;
         System.out.println("Fin d'analyse lexicale");
     }
 
@@ -96,7 +97,11 @@ public class AnalLex {
         }
 
         AnalLex lexical = new AnalLex(args[0]); // Creation de l'analyseur lexical
+        StringJoiner joiner = new StringJoiner("\n", "", ""); // Delimiter, prefix, suffix
 
-        Writer w = new Writer(args[1], lexical.output); // Ecriture de toWrite dans fichier args[1]
+        for (Terminal t : lexical.output) {
+            joiner.add(t.toString()); // Add the string representation of each object
+        }
+        Writer w = new Writer(args[1], joiner.toString()); // Ecriture de toWrite dans fichier args[1]
     }
 }
