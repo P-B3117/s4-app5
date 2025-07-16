@@ -10,9 +10,11 @@ pkgs.mkShellNoCC {
 
 
   shellHook = ''
-      alias compile='javac *.java'
-      alias build='jar cvfm AnalLex.jar manifest.txt AnalLex.class'
-      alias run='java AnalLex.jar'
-      alias clean='rm *.class'
+      alias compile='mkdir -p bin && javac -d bin $(find . -name "*.java")'
+      alias build='compile && jar cvfm AnalLex.jar manifest.txt -C bin app6'
+      alias run='java -jar AnalLex.jar'
+      alias clean='rm -rf bin *.jar'
+
+      echo "✅ Java dev shell ready! Use: compile, build, run, clean"
   '';
 }
