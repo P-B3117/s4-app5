@@ -11,7 +11,7 @@ pkgs.mkShellNoCC {
 
   shellHook = ''
       alias compile='javac *.java'
-      alias build='jar cvfm AnalLex.jar manifest.txt *.class'
+      alias build='jar cvfm AnalLex.jar manifest.txt AnalLex.class'
       alias run='java AnalLex.jar'
       alias clean='rm *.class'
   '';
