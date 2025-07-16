@@ -28,7 +28,40 @@ public class AnalLex {
       Cette methode est une implementation d'un AEF
  */
     public Terminal prochainTerminal() {
-        return new Terminal("CHANGE ME");
+        System.out.println("Prochain terminal");
+        if (resteTerminal() == false) {
+            System.out.println("No more terminal");
+            return null;
+        }
+
+        String chaineBackup = chaine;
+        int index = 0;
+        if (!isOperator(chaine.charAt(0))) {
+            while (!isOperator(chaine.charAt(0))) {
+                if ((chaineBackup.length() - 1) == index) break;
+                System.out.println(
+                    "Index: " +
+                    index +
+                    "    Chain: " +
+                    chaine +
+                    "    Chain length: " +
+                    (chaineBackup.length() - 1)
+                );
+                chaine = chaine.substring(1);
+                index++;
+            }
+        } else {
+            index++;
+        }
+        String token = chaineBackup.substring(0, index);
+
+        chaine = chaineBackup.substring(index);
+        System.out.println("Index: " + index + " Chain: " + chaine);
+        return new Terminal(token);
+    }
+
+    private static boolean isOperator(char c) {
+        return (c == '+' || c == '-' || c == '*' || c == '/');
     }
 
     /** ErreurLex() envoie un message d'erreur lexicale
