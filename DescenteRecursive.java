@@ -20,7 +20,7 @@ public class DescenteRecursive {
      *    Elle retourne une reference sur la racine de l'AST construit
      */
     public ElemAST AnalSynt() {
-        //
+        return null;
     }
 
     // Methode pour chaque symbole non-terminal de la grammaire retenue

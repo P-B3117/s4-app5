@@ -7,16 +7,14 @@ package app6;
  */
 public class Terminal {
 
+    // Constantes et attributs
+    public String chaine;
 
-// Constantes et attributs
-//  ....
-
-
-/** Un ou deux constructeurs (ou plus, si vous voulez)
-  *   pour l'initalisation d'attributs 
- */	
-  public Terminal( ) {   // arguments possibles
-     //
-  }
-
+    /** Un ou deux constructeurs (ou plus, si vous voulez)
+     *   pour l'initalisation d'attributs
+     */
+    public Terminal(String name) {
+        // arguments possibles
+        //
+    }
 }
