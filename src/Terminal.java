@@ -22,6 +22,27 @@ public class Terminal {
         );
     }
 
+    public boolean isOpeningParenthesis() {
+        return (chaine.equals("("));
+    }
+
+    public boolean isClosingParenthesis() {
+        return (chaine.equals(")"));
+    }
+
+    public boolean isVariable() {
+        return (
+            !this.isOperator() &&
+            !this.isOpeningParenthesis() &&
+            !this.isClosingParenthesis() &&
+            !this.isLiteral()
+        );
+    }
+
+    public boolean isLiteral() {
+        return (chaine.matches("\\d+"));
+    }
+
     @Override
     public String toString() {
         return chaine;

@@ -8,7 +8,8 @@ import src.Terminal;
  */
 public class NoeudAST extends ElemAST {
 
-    // Attributs
+    public ElemAST left;
+    public ElemAST right;
 
     /** Constructeur pour l'initialisation d'attributs
      */

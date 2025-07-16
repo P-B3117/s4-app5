@@ -1,5 +1,7 @@
 package src.ast;
 
+import src.Terminal;
+
 /** @author Ahmed Khoumsi */
 
 /** Classe representant une feuille d'AST
@@ -10,7 +12,7 @@ public class FeuilleAST extends ElemAST {
 
     /**Constructeur pour l'initialisation d'attribut(s)
      */
-    public FeuilleAST() {
+    public FeuilleAST(Terminal token) {
         // avec arguments
         //
     }

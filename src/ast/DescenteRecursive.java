@@ -1,6 +1,7 @@
 package src.ast;
 
 import src.AnalLex;
+import src.Writer;
 
 /** @author Ahmed Khoumsi */
 
@@ -8,30 +9,56 @@ import src.AnalLex;
  */
 public class DescenteRecursive {
 
-    // Attributs
+    private AnalLex lex;
 
     /** Constructeur de DescenteRecursive :
       - recoit en argument le nom du fichier contenant l'expression a analyser
       - pour l'initalisation d'attribut(s)
  */
-    public DescenteRecursive(String in) {
-        AnalLex lex = new AnalLex(in);
-        ElemAST ast = null;
-
-        while (lex.resteTerminal()) {
-            var token = lex.prochainTerminal();
-
-            if (token.isOperator()) {
-                ast = new NoeudAST(Operateur.fromToken(token));
-            }
-        }
+    public DescenteRecursive(AnalLex lex) {
+        this.lex = lex;
     }
 
     /** AnalSynt() effectue l'analyse syntaxique et construit l'AST.
      *    Elle retourne une reference sur la racine de l'AST construit
      */
     public ElemAST AnalSynt() {
-        return null;
+        ElemAST current = null;
+
+        while (lex.resteTerminal()) {
+            var token = lex.prochainTerminal();
+
+            if (token.isClosingParenthesis()) {
+                break;
+            } else if (token.isOpeningParenthesis()) {
+                var node = AnalSynt();
+                if (current instanceof NoeudAST) {
+                    ((NoeudAST) current).right = node;
+                } else {
+                    current = node;
+                }
+            } else if (token.isOperator()) {
+                var noeud = new NoeudAST(Operateur.fromToken(token));
+                noeud.left = current;
+                current = noeud;
+            } else if (token.isVariable()) {
+                var node = new FeuilleAST(token);
+                if (current instanceof NoeudAST) {
+                    ((NoeudAST) current).right = node;
+                } else {
+                    current = node;
+                }
+            } else if (token.isLiteral()) {
+                var node = new FeuilleAST(token);
+                if (current instanceof NoeudAST) {
+                    ((NoeudAST) current).right = node;
+                } else {
+                    current = node;
+                }
+            }
+        }
+
+        return current;
     }
 
     // Methode pour chaque symbole non-terminal de la grammaire retenue
@@ -49,13 +76,11 @@ public class DescenteRecursive {
         String toWriteLect = "";
         String toWriteEval = "";
 
+        var lex = new AnalLex("ExpArith.txt");
+
         System.out.println("Debut d'analyse syntaxique");
-        if (args.length == 0) {
-            args = new String[2];
-            args[0] = "ExpArith.txt";
-            args[1] = "ResultatSyntaxique.txt";
-        }
-        DescenteRecursive dr = new DescenteRecursive(args[0]);
+        DescenteRecursive dr = new DescenteRecursive(lex);
+
         try {
             ElemAST RacineAST = dr.AnalSynt();
             toWriteLect +=
@@ -64,7 +89,10 @@ public class DescenteRecursive {
             toWriteEval +=
                 "Evaluation de l'AST trouve : " + RacineAST.EvalAST() + "\n";
             System.out.println(toWriteEval);
-            Writer w = new Writer(args[1], toWriteLect + toWriteEval); // Ecriture de toWrite
+            Writer w = new Writer(
+                "ResultatSyntaxique.txt",
+                toWriteLect + toWriteEval
+            ); // Ecriture de toWrite
             // dans fichier args[1]
         } catch (Exception e) {
             System.out.println(e);
