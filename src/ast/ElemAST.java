@@ -1,4 +1,4 @@
-package app6;
+package src.ast;
 
 /** @author Ahmed Khoumsi */
 

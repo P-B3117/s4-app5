@@ -1,4 +1,6 @@
-package app6;
+package src;
+
+import src.ast.ElemAST;
 
 /** @author Ahmed Khoumsi */
 
