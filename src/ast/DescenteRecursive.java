@@ -2,102 +2,208 @@ package src.ast;
 
 import src.AnalLex;
 import src.Writer;
+import src.Terminal;
 
-/** @author Ahmed Khoumsi */
+/** @author Ahmed Khoumsi (adapté) */
 
-/** Cette classe effectue l'analyse syntaxique
+/** Cette classe effectue l'analyse syntaxique et construit l'AST.
+ *  Elle implémente un parser descendant récursif pour des expressions arithmétiques
+ *  avec gestion de la priorité et de l'associativité à droite.
  */
 public class DescenteRecursive {
 
     private AnalLex lex;
+    private Terminal currentToken; // Le token courant que le parser examine
+    private int tokenIndex; // Index du token courant dans la liste des tokens
+    private java.util.ArrayList<Terminal> tokens; // Liste de tous les tokens
 
-    /** Constructeur de DescenteRecursive :
-      - recoit en argument le nom du fichier contenant l'expression a analyser
-      - pour l'initalisation d'attribut(s)
- */
+    /**
+     * Constructeur de DescenteRecursive.
+     * Reçoit en argument l'analyseur lexical initialisé.
+     */
     public DescenteRecursive(AnalLex lex) {
         this.lex = lex;
+        this.tokens = lex.getOutput();
+        this.tokenIndex = 0;
     }
 
-    /** AnalSynt() effectue l'analyse syntaxique et construit l'AST.
-     *    Elle retourne une reference sur la racine de l'AST construit
+    /**
+     * AnalSynt() effectue l'analyse syntaxique et construit l'AST.
+     * Elle retourne une référence sur la racine de l'AST construit.
+     * C'est la méthode de démarrage du parsing.
      */
     public ElemAST AnalSynt() {
-        ElemAST current = null;
-
-        while (lex.resteTerminal()) {
-            var token = lex.prochainTerminal();
-
-            if (token.isClosingParenthesis()) {
-                break;
-            } else if (token.isOpeningParenthesis()) {
-                var node = AnalSynt();
-                if (current instanceof NoeudAST) {
-                    ((NoeudAST) current).right = node;
-                } else {
-                    current = node;
-                }
-            } else if (token.isOperator()) {
-                var noeud = new NoeudAST(Operateur.fromToken(token));
-                noeud.left = current;
-                current = noeud;
-            } else if (token.isVariable()) {
-                var node = new FeuilleAST(token);
-                if (current instanceof NoeudAST) {
-                    ((NoeudAST) current).right = node;
-                } else {
-                    current = node;
-                }
-            } else if (token.isLiteral()) {
-                var node = new FeuilleAST(token);
-                if (current instanceof NoeudAST) {
-                    ((NoeudAST) current).right = node;
-                } else {
-                    current = node;
-                }
-            }
+        // Initialise le premier token avant de commencer le parsing
+        if (tokenIndex < tokens.size()) {
+            currentToken = tokens.get(tokenIndex);
+        } else {
+            currentToken = null;
         }
 
-        return current;
+        // Commence l'analyse par le non-terminal de départ de la grammaire (Exp)
+        ElemAST ast = parseExp();
+
+        // Après avoir parsé l'expression, le prochain token devrait être la fin de l'entrée.
+        // Si ce n'est pas le cas, cela signifie qu'il y a des tokens en trop.
+        if (currentToken != null) {
+            ErreurSynt("Tokens inattendus à la fin de l'expression : " + currentToken.getValue());
+        }
+
+        return ast;
     }
 
-    // Methode pour chaque symbole non-terminal de la grammaire retenue
-    // ...
-    // ...
+    /**
+     * Méthode utilitaire pour vérifier le token courant et passer au suivant.
+     * @param expectedValue La valeur attendue du token.
+     */
+    private void match(String expectedValue) {
+        if (currentToken == null || !currentToken.getValue().equals(expectedValue)) {
+            ErreurSynt("Erreur: Attendu '" + expectedValue + "', mais reçu '" + (currentToken != null ? currentToken.getValue() : "FIN_DE_FICHIER") + "'");
+        }
+        // Consomme le token courant et passe au suivant
+        tokenIndex++;
+        if (tokenIndex < tokens.size()) {
+            currentToken = tokens.get(tokenIndex);
+        } else {
+            currentToken = null; // Marque la fin de l'entrée
+        }
+    }
 
-    /** ErreurSynt() envoie un message d'erreur syntaxique
+    // --- Méthodes pour chaque non-terminal de la grammaire ---
+
+    /**
+     * Implémente la règle: Exp -> Term ExpTail
+     * Gère les opérateurs + et -.
+     * @return Le noeud AST de l'expression parsée.
+     */
+    private ElemAST parseExp() {
+        // Exp commence toujours par un Term
+        ElemAST leftOperand = parseTerm();
+        // Puis gère la queue de l'expression (ExpTail)
+        return parseExpTail(leftOperand);
+    }
+
+    /**
+     * Implémente la règle: ExpTail -> + Term ExpTail | - Term ExpTail | epsilon
+     * Gère l'associativité à droite pour + et -.
+     * @param leftOperand L'opérande gauche accumulée.
+     * @return Le noeud AST résultant.
+     */
+    private ElemAST parseExpTail(ElemAST leftOperand) {
+        if (currentToken != null) {
+            if (currentToken.isPlus() || currentToken.isMinus()) {
+                Terminal opToken = currentToken; // Sauvegarde l'opérateur
+                match(opToken.getValue()); // Consomme l'opérateur (+ ou -)
+
+                // L'opérande droite est un Term
+                ElemAST rightOperand = parseTerm();
+
+                // Crée un nœud d'opérateur
+                NoeudAST node = new NoeudAST(Operateur.fromToken(opToken));
+                node.left = leftOperand; // L'opérande gauche est celle qui a été passée
+                node.right = rightOperand; // L'opérande droite est le Term juste parsé
+
+                // Appel récursif pour gérer la suite de l'expression (associativité à droite)
+                return parseExpTail(node);
+            }
+        }
+        // Cas epsilon: Pas de + ou - suivant, l'opérande gauche est le résultat final
+        return leftOperand;
+    }
+
+    /**
+     * Implémente la règle: Term -> Fact TermTail
+     * Gère les opérateurs * et /.
+     * @return Le noeud AST du terme parsé.
+     */
+    private ElemAST parseTerm() {
+        // Term commence toujours par un Fact
+        ElemAST leftOperand = parseFact();
+        // Puis gère la queue du terme (TermTail)
+        return parseTermTail(leftOperand);
+    }
+
+    /**
+     * Implémente la règle: TermTail -> * Fact TermTail | / Fact TermTail | epsilon
+     * Gère l'associativité à droite pour * et /.
+     * @param leftOperand L'opérande gauche accumulée.
+     * @return Le noeud AST résultant.
+     */
+    private ElemAST parseTermTail(ElemAST leftOperand) {
+        if (currentToken != null) {
+            if (currentToken.isMultiply() || currentToken.isDivide()) {
+                Terminal opToken = currentToken; // Sauvegarde l'opérateur
+                match(opToken.getValue()); // Consomme l'opérateur (* ou /)
+
+                // L'opérande droite est un Fact
+                ElemAST rightOperand = parseFact();
+
+                // Crée un nœud d'opérateur
+                NoeudAST node = new NoeudAST(Operateur.fromToken(opToken));
+                node.left = leftOperand;
+                node.right = rightOperand;
+
+                // Appel récursif pour gérer la suite du terme (associativité à droite)
+                return parseTermTail(node);
+            }
+        }
+        // Cas epsilon: Pas de * ou / suivant, l'opérande gauche est le résultat final
+        return leftOperand;
+    }
+
+    /**
+     * Implémente la règle: Fact -> Num | Var | (Exp)
+     * Gère les feuilles de l'AST et les parenthèses.
+     * @return Le noeud AST du facteur parsé (FeuilleAST ou sous-arbre d'expression).
+     */
+    private ElemAST parseFact() {
+        if (currentToken == null) {
+            ErreurSynt("Erreur: Attendu un nombre, une variable ou une parenthèse ouvrante, mais fin de fichier.");
+        }
+
+        if (currentToken.isOpeningParenthesis()) {
+            match("("); // Consomme la parenthèse ouvrante
+            ElemAST exprInParen = parseExp(); // Parse l'expression à l'intérieur
+            match(")"); // Consomme la parenthèse fermante
+            return exprInParen;
+        } else if (currentToken.isVariable() || currentToken.isLiteral()) {
+            FeuilleAST leaf = new FeuilleAST(currentToken);
+            match(currentToken.getValue()); // Consomme le nombre ou la variable
+            return leaf;
+        } else {
+            ErreurSynt("Erreur: Attendu un nombre, une variable ou '(', mais reçu '" + currentToken.getValue() + "'");
+        }
+        return null; // Ne devrait pas être atteint
+    }
+
+    /**
+     * ErreurSynt() envoie un message d'erreur syntaxique
      */
     public void ErreurSynt(String s) {
-        //
+        throw new IllegalStateException("Erreur Syntactique: " + s);
     }
 
     //Methode principale a lancer pour tester l'analyseur syntaxique
     public static void main(String[] args) {
-        String toWriteLect = "";
-        String toWriteEval = "";
-
-        var lex = new AnalLex("ExpArith.txt");
+        // Adaptez le chemin du fichier si nécessaire
+        var lex = new AnalLex("TestExtrait.txt");
 
         System.out.println("Debut d'analyse syntaxique");
         DescenteRecursive dr = new DescenteRecursive(lex);
 
         try {
             ElemAST RacineAST = dr.AnalSynt();
-            toWriteLect +=
-                "Lecture de l'AST trouve : " + RacineAST.LectAST() + "\n";
+            String toWriteLect = "Lecture de l'AST trouvé : " + RacineAST.LectAST() + "\n";
             System.out.println(toWriteLect);
-            toWriteEval +=
-                "Evaluation de l'AST trouve : " + RacineAST.EvalAST() + "\n";
+            String toWriteEval = "Evaluation de l'AST trouvé : " + RacineAST.EvalAST() + "\n";
             System.out.println(toWriteEval);
-            Writer w = new Writer(
-                "ResultatSyntaxique.txt",
-                toWriteLect + toWriteEval
-            ); // Ecriture de toWrite
-            // dans fichier args[1]
+
+            Writer w = new Writer("ResultatSyntaxique.txt", toWriteLect + toWriteEval);
+            System.out.println("Resultats écrits dans ResultatSyntaxique.txt");
         } catch (Exception e) {
-            System.out.println(e);
+            System.err.println("Une erreur s'est produite lors de l'analyse : " + e.getMessage());
             e.printStackTrace();
-            System.exit(51);
+            System.exit(51); // Code d'erreur pour la sortie
         }
         System.out.println("Analyse syntaxique terminee");
     }

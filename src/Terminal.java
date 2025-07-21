@@ -43,6 +43,26 @@ public class Terminal {
         return (chaine.matches("\\d+"));
     }
 
+    public boolean isPlus() {
+        return chaine.equals("+");
+    }
+
+    public boolean isMinus() {
+        return chaine.equals("-");
+    }
+
+    public boolean isMultiply() {
+        return chaine.equals("*");
+    }
+
+    public boolean isDivide() {
+        return chaine.equals("/");
+    }
+
+    public String getValue() {
+        return chaine;
+    }
+
     @Override
     public String toString() {
         return chaine;

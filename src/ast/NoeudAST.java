@@ -4,30 +4,49 @@ import src.Terminal;
 
 /** @author Ahmed Khoumsi */
 
-/** Classe representant une feuille d'AST
+/** Classe representant un noeud d'AST
  */
 public class NoeudAST extends ElemAST {
 
     public ElemAST left;
     public ElemAST right;
+    private Operateur operateur;
 
     /** Constructeur pour l'initialisation d'attributs
      */
     public NoeudAST(Operateur op) {
-        // avec arguments
-        //
+        this.operateur = op;
     }
 
     /** Evaluation de noeud d'AST
      */
     public int EvalAST() {
-        return 0;
+        int leftVal = left.EvalAST();
+        int rightVal = right.EvalAST();
+        
+        switch (operateur) {
+            case Addition:
+                return leftVal + rightVal;
+            case Soustraction:
+                return leftVal - rightVal;
+            case Multiplication:
+                return leftVal * rightVal;
+            case Division:
+                if (rightVal == 0) {
+                    ErreurEvalAST("Division par zéro");
+                    return 0;
+                }
+                return leftVal / rightVal;
+            default:
+                ErreurEvalAST("Opérateur non supporté: " + operateur);
+                return 0;
+        }
     }
 
     /** Lecture de noeud d'AST
      */
     public String LectAST() {
-        return "";
+        return "(" + left.LectAST() + " " + operateur.getSymbol() + " " + right.LectAST() + ")";
     }
 }
 
