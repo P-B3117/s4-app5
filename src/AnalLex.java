@@ -22,7 +22,7 @@ public class AnalLex {
             add(' ');
         }
     };
-    public ArrayList<Terminal> output = new ArrayList<>();
+    private ArrayList<Terminal> output = new ArrayList<>();
 
     /** Constructeur pour l'initialisation d'attribut(s)
      */
@@ -42,6 +42,10 @@ public class AnalLex {
         } //    d'analyse lexicale
         System.out.println(toWrite); // Ecriture de toWrite sur la console
         System.out.println("Fin d'analyse lexicale");
+    }
+
+    public ArrayList<Terminal> getOutput() {
+        return output;
     }
 
     /** resteTerminal() retourne :
