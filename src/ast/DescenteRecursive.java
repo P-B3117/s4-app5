@@ -1,8 +1,8 @@
 package src.ast;
 
 import src.AnalLex;
-import src.Writer;
 import src.Terminal;
+import src.Writer;
 
 /** @author Ahmed Khoumsi (adapté) */
 
@@ -13,9 +13,9 @@ import src.Terminal;
 public class DescenteRecursive {
 
     private AnalLex lex;
-    private Terminal currentToken; // Le token courant que le parser examine
-    private int tokenIndex; // Index du token courant dans la liste des tokens
-    private java.util.ArrayList<Terminal> tokens; // Liste de tous les tokens
+    private Terminal currentToken;
+    private int tokenIndex;
+    private java.util.ArrayList<Terminal> tokens;
 
     /**
      * Constructeur de DescenteRecursive.
@@ -33,20 +33,19 @@ public class DescenteRecursive {
      * C'est la méthode de démarrage du parsing.
      */
     public ElemAST AnalSynt() {
-        // Initialise le premier token avant de commencer le parsing
         if (tokenIndex < tokens.size()) {
             currentToken = tokens.get(tokenIndex);
         } else {
             currentToken = null;
         }
 
-        // Commence l'analyse par le non-terminal de départ de la grammaire (Exp)
         ElemAST ast = parseExp();
 
-        // Après avoir parsé l'expression, le prochain token devrait être la fin de l'entrée.
-        // Si ce n'est pas le cas, cela signifie qu'il y a des tokens en trop.
         if (currentToken != null) {
-            ErreurSynt("Tokens inattendus à la fin de l'expression : " + currentToken.getValue());
+            ErreurSynt(
+                "Tokens inattendus à la fin de l'expression : " +
+                currentToken.getValue()
+            );
         }
 
         return ast;
@@ -57,19 +56,27 @@ public class DescenteRecursive {
      * @param expectedValue La valeur attendue du token.
      */
     private void match(String expectedValue) {
-        if (currentToken == null || !currentToken.getValue().equals(expectedValue)) {
-            ErreurSynt("Erreur: Attendu '" + expectedValue + "', mais reçu '" + (currentToken != null ? currentToken.getValue() : "FIN_DE_FICHIER") + "'");
+        if (
+            currentToken == null ||
+            !currentToken.getValue().equals(expectedValue)
+        ) {
+            ErreurSynt(
+                "Erreur: Attendu '" +
+                expectedValue +
+                "', mais reçu '" +
+                (currentToken != null
+                        ? currentToken.getValue()
+                        : "FIN_DE_FICHIER") +
+                "'"
+            );
         }
-        // Consomme le token courant et passe au suivant
         tokenIndex++;
         if (tokenIndex < tokens.size()) {
             currentToken = tokens.get(tokenIndex);
         } else {
-            currentToken = null; // Marque la fin de l'entrée
+            currentToken = null;
         }
     }
-
-    // --- Méthodes pour chaque non-terminal de la grammaire ---
 
     /**
      * Implémente la règle: Exp -> Term ExpTail
@@ -77,9 +84,7 @@ public class DescenteRecursive {
      * @return Le noeud AST de l'expression parsée.
      */
     private ElemAST parseExp() {
-        // Exp commence toujours par un Term
         ElemAST leftOperand = parseTerm();
-        // Puis gère la queue de l'expression (ExpTail)
         return parseExpTail(leftOperand);
     }
 
@@ -92,22 +97,18 @@ public class DescenteRecursive {
     private ElemAST parseExpTail(ElemAST leftOperand) {
         if (currentToken != null) {
             if (currentToken.isPlus() || currentToken.isMinus()) {
-                Terminal opToken = currentToken; // Sauvegarde l'opérateur
-                match(opToken.getValue()); // Consomme l'opérateur (+ ou -)
+                Terminal opToken = currentToken;
+                match(opToken.getValue());
 
-                // L'opérande droite est un Term
                 ElemAST rightOperand = parseTerm();
 
-                // Crée un nœud d'opérateur
                 NoeudAST node = new NoeudAST(Operateur.fromToken(opToken));
-                node.left = leftOperand; // L'opérande gauche est celle qui a été passée
-                node.right = rightOperand; // L'opérande droite est le Term juste parsé
+                node.left = leftOperand;
+                node.right = rightOperand;
 
-                // Appel récursif pour gérer la suite de l'expression (associativité à droite)
                 return parseExpTail(node);
             }
         }
-        // Cas epsilon: Pas de + ou - suivant, l'opérande gauche est le résultat final
         return leftOperand;
     }
 
@@ -117,9 +118,7 @@ public class DescenteRecursive {
      * @return Le noeud AST du terme parsé.
      */
     private ElemAST parseTerm() {
-        // Term commence toujours par un Fact
         ElemAST leftOperand = parseFact();
-        // Puis gère la queue du terme (TermTail)
         return parseTermTail(leftOperand);
     }
 
@@ -132,22 +131,18 @@ public class DescenteRecursive {
     private ElemAST parseTermTail(ElemAST leftOperand) {
         if (currentToken != null) {
             if (currentToken.isMultiply() || currentToken.isDivide()) {
-                Terminal opToken = currentToken; // Sauvegarde l'opérateur
-                match(opToken.getValue()); // Consomme l'opérateur (* ou /)
+                Terminal opToken = currentToken;
+                match(opToken.getValue());
 
-                // L'opérande droite est un Fact
                 ElemAST rightOperand = parseFact();
 
-                // Crée un nœud d'opérateur
                 NoeudAST node = new NoeudAST(Operateur.fromToken(opToken));
                 node.left = leftOperand;
                 node.right = rightOperand;
 
-                // Appel récursif pour gérer la suite du terme (associativité à droite)
                 return parseTermTail(node);
             }
         }
-        // Cas epsilon: Pas de * ou / suivant, l'opérande gauche est le résultat final
         return leftOperand;
     }
 
@@ -158,22 +153,28 @@ public class DescenteRecursive {
      */
     private ElemAST parseFact() {
         if (currentToken == null) {
-            ErreurSynt("Erreur: Attendu un nombre, une variable ou une parenthèse ouvrante, mais fin de fichier.");
+            ErreurSynt(
+                "Erreur: Attendu un nombre, une variable ou une parenthèse ouvrante, mais fin de fichier."
+            );
         }
 
         if (currentToken.isOpeningParenthesis()) {
-            match("("); // Consomme la parenthèse ouvrante
-            ElemAST exprInParen = parseExp(); // Parse l'expression à l'intérieur
-            match(")"); // Consomme la parenthèse fermante
+            match("(");
+            ElemAST exprInParen = parseExp();
+            match(")");
             return exprInParen;
         } else if (currentToken.isVariable() || currentToken.isLiteral()) {
             FeuilleAST leaf = new FeuilleAST(currentToken);
-            match(currentToken.getValue()); // Consomme le nombre ou la variable
+            match(currentToken.getValue());
             return leaf;
         } else {
-            ErreurSynt("Erreur: Attendu un nombre, une variable ou '(', mais reçu '" + currentToken.getValue() + "'");
+            ErreurSynt(
+                "Erreur: Attendu un nombre, une variable ou '(', mais reçu '" +
+                currentToken.getValue() +
+                "'"
+            );
         }
-        return null; // Ne devrait pas être atteint
+        return null;
     }
 
     /**
@@ -183,9 +184,7 @@ public class DescenteRecursive {
         throw new IllegalStateException("Erreur Syntactique: " + s);
     }
 
-    //Methode principale a lancer pour tester l'analyseur syntaxique
     public static void main(String[] args) {
-        // Adaptez le chemin du fichier si nécessaire
         var lex = new AnalLex("TestExtrait.txt");
 
         System.out.println("Debut d'analyse syntaxique");
@@ -193,17 +192,25 @@ public class DescenteRecursive {
 
         try {
             ElemAST RacineAST = dr.AnalSynt();
-            String toWriteLect = "Lecture de l'AST trouvé : " + RacineAST.LectAST() + "\n";
+            String toWriteLect =
+                "Lecture de l'AST trouvé : " + RacineAST.LectAST() + "\n";
             System.out.println(toWriteLect);
-            String toWriteEval = "Evaluation de l'AST trouvé : " + RacineAST.EvalAST() + "\n";
+            String toWriteEval =
+                "Evaluation de l'AST trouvé : " + RacineAST.EvalAST() + "\n";
             System.out.println(toWriteEval);
 
-            Writer w = new Writer("ResultatSyntaxique.txt", toWriteLect + toWriteEval);
+            Writer w = new Writer(
+                "ResultatSyntaxique.txt",
+                toWriteLect + toWriteEval
+            );
             System.out.println("Resultats écrits dans ResultatSyntaxique.txt");
         } catch (Exception e) {
-            System.err.println("Une erreur s'est produite lors de l'analyse : " + e.getMessage());
+            System.err.println(
+                "Une erreur s'est produite lors de l'analyse : " +
+                e.getMessage()
+            );
             e.printStackTrace();
-            System.exit(51); // Code d'erreur pour la sortie
+            System.exit(51);
         }
         System.out.println("Analyse syntaxique terminee");
     }
