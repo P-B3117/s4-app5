@@ -9,19 +9,6 @@ public class AnalLex {
 
     // Attributs
     private String chaine;
-    private static ArrayList<Character> legalChars = new ArrayList<
-        Character
-    >() {
-        {
-            add('+');
-            add('-');
-            add('*');
-            add('/');
-            add('(');
-            add(')');
-            add(' ');
-        }
-    };
     private ArrayList<Terminal> output = new ArrayList<>();
 
     /** Constructeur pour l'initialisation d'attribut(s)
@@ -32,6 +19,7 @@ public class AnalLex {
 
         Reader r = new Reader(in);
         chaine = r.toString();
+        chaine = chaine.replaceAll("\\s", "");
 
         // Execution de l'analyseur lexical
         Terminal t = null;
@@ -53,7 +41,12 @@ public class AnalLex {
       true s'il reste encore au moins un terminal qui n'a pas ete retourne
  */
     public boolean resteTerminal() {
-        if (chaine == null || chaine.isEmpty() || chaine.length() == 1) {
+        if (
+            chaine == null ||
+            chaine.isEmpty() ||
+            chaine.length() == 1 ||
+            chaine.charAt(0) == '\n'
+        ) {
             return false;
         }
         return true;
@@ -64,6 +57,7 @@ public class AnalLex {
     */
     // TODO regarder le next character so comme ça le isTerminal
     public Terminal prochainTerminal() {
+        resetTerminal();
         System.out.println("Prochain terminal");
         if (resteTerminal() == false) {
             System.out.println("No more terminal");
@@ -72,21 +66,20 @@ public class AnalLex {
 
         String chaineBackup = chaine;
         int index = 0;
-        if (!isTerminal(chaine.charAt(0))) {
-            while (!isTerminal(chaine.charAt(0))) {
-                if ((chaineBackup.length() - 1) == index) break;
-                System.out.println(
-                    "Index: " +
-                    index +
-                    "    Chain: " +
-                    chaine +
-                    "    Chain length: " +
-                    (chaineBackup.length() - 1)
-                );
-                chaine = chaine.substring(1);
-                index++;
-            }
-        } else {
+        while (!isTerminal(chaine.charAt(0))) {
+            if ((chaineBackup.length() - 1) == index) break;
+            System.out.println(
+                "Index: " +
+                index +
+                "    Chain: " +
+                chaine +
+                "    Chain length: " +
+                (chaineBackup.length() - 1)
+            );
+            chaine = chaine.substring(1);
+            index++;
+        }
+        if (index == 0) {
             index++;
         }
         String token = chaineBackup.substring(0, index);
@@ -96,44 +89,69 @@ public class AnalLex {
         return new Terminal(token);
     }
 
-    static boolean isCharChainFlag = false;
-    static boolean wasCharChainFlag = false;
-    static char lastChar = ' ';
+    boolean isCharChainFlag = false;
+    boolean wasCharChainFlag = false;
+    Terminal.CharType lastChar = Terminal.CharType.ERROR;
+
+    private void resetTerminal() {
+        lastChar = Terminal.CharType.ERROR;
+    }
 
     private boolean isTerminal(char c) {
+        System.out.println("isCharChainFlag: " + isCharChainFlag);
         boolean returnVal = false;
+        Terminal.CharType type = Terminal.classifyChar(c);
 
-        if (legalChars.contains(c)) {
-            // caractères spéciaux (opérateurs)
-            returnVal = true;
-            isCharChainFlag = false;
-        } else if (
-            Character.isUpperCase(c) // une majuscule
-        ) {
-            if (isCharChainFlag) {
-                ErreurLex(c);
-                isCharChainFlag = true;
-            }
-            isCharChainFlag = true;
-            returnVal = false;
-        } else if (
-            Character.isLowerCase(c) || c == '_' // une minuscule
-        ) {
-            if (!isCharChainFlag) {
-                ErreurLex(c);
+        switch (type) {
+            case Terminal.CharType.OPERATOR:
+                System.out.println("OPERATOR");
+                // caractères spéciaux (opérateurs)
+                returnVal = true;
                 isCharChainFlag = false;
-            }
-            isCharChainFlag = true;
-            returnVal = false;
-        } else if (
-            Character.isDigit(c) // si on as un chiffre
-        ) {
-            isCharChainFlag = false;
-            returnVal = false;
-        } else {
-            ErreurLex(c);
-            returnVal = false;
+                break;
+            case Terminal.CharType.UPPERCASE:
+                System.out.println("UPPERCASE");
+                if (
+                    lastChar == Terminal.CharType.LOWERCASE ||
+                    lastChar == Terminal.CharType.UNDERSCORE ||
+                    lastChar == Terminal.CharType.UPPERCASE
+                ) {
+                    ErreurLex(c);
+                    isCharChainFlag = true;
+                }
+                isCharChainFlag = true;
+                returnVal = false;
+                break;
+            case Terminal.CharType.LOWERCASE:
+                System.out.println("LOWERCASE");
+                if (!isCharChainFlag) {
+                    ErreurLex(c);
+                    isCharChainFlag = false;
+                }
+                isCharChainFlag = true;
+                returnVal = false;
+                break;
+            case Terminal.CharType.UNDERSCORE:
+                System.out.println("UNDERSCORE");
+                isCharChainFlag = true;
+                returnVal = false;
+                break;
+            case Terminal.CharType.NUMBER:
+                System.out.println("NUMBER");
+                returnVal = false;
+                isCharChainFlag = false;
+                break;
+            case Terminal.CharType.RETURN:
+                System.out.println("RETURN");
+                returnVal = true;
+                isCharChainFlag = false;
+                break;
+            default:
+                ErreurLex(c);
+                returnVal = false;
+                break;
         }
+
         // fin de nom de variables
         if (wasCharChainFlag && !isCharChainFlag) {
             returnVal = true;
@@ -144,7 +162,7 @@ public class AnalLex {
             returnVal = true;
         }
         // on se souvient du dernier caractère
-        lastChar = c;
+        lastChar = type;
         wasCharChainFlag = isCharChainFlag;
         return returnVal;
     }
@@ -153,12 +171,14 @@ public class AnalLex {
      */
     public static void ErreurLex(String s) {
         System.out.println("Erreur lexicale: " + s);
+        System.exit(254);
     }
 
     /** ErreurLex() envoie un message d'erreur lexicale
      */
     public static void ErreurLex(Character c) {
         System.out.println("Erreur lexicale: " + c);
+        System.exit(254);
     }
 
     //Methode principale a lancer pour tester l'analyseur lexical
