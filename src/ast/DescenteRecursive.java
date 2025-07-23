@@ -187,7 +187,7 @@ public class DescenteRecursive {
     }
 
     public static void main(String[] args) {
-        var lex = new AnalLex("TestAssociativite.txt");
+        var lex = new AnalLex("input.txt");
 
         System.out.println("Debut d'analyse syntaxique");
         DescenteRecursive dr = new DescenteRecursive(lex);
