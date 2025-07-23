@@ -100,13 +100,14 @@ public class DescenteRecursive {
                 Terminal opToken = currentToken;
                 match(opToken.getValue());
 
-                ElemAST rightOperand = parseTerm();
+                ElemAST rightTerm = parseTerm();
+                ElemAST rightOperand = parseExpTail(rightTerm); // Associativité à droite
 
                 NoeudAST node = new NoeudAST(Operateur.fromToken(opToken));
                 node.left = leftOperand;
                 node.right = rightOperand;
 
-                return parseExpTail(node);
+                return node;
             }
         }
         return leftOperand;
@@ -134,13 +135,14 @@ public class DescenteRecursive {
                 Terminal opToken = currentToken;
                 match(opToken.getValue());
 
-                ElemAST rightOperand = parseFact();
+                ElemAST rightFact = parseFact();
+                ElemAST rightOperand = parseTermTail(rightFact); // Associativité à droite
 
                 NoeudAST node = new NoeudAST(Operateur.fromToken(opToken));
                 node.left = leftOperand;
                 node.right = rightOperand;
 
-                return parseTermTail(node);
+                return node;
             }
         }
         return leftOperand;
@@ -185,7 +187,7 @@ public class DescenteRecursive {
     }
 
     public static void main(String[] args) {
-        var lex = new AnalLex("ExpArith.txt");
+        var lex = new AnalLex("TestAssociativite.txt");
 
         System.out.println("Debut d'analyse syntaxique");
         DescenteRecursive dr = new DescenteRecursive(lex);
