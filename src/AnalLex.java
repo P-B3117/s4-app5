@@ -153,9 +153,6 @@ public class AnalLex {
             wasCharChainFlag = false;
             isCharChainFlag = false;
         }
-        if (!wasCharChainFlag && isCharChainFlag) {
-            returnVal = true;
-        }
         // on se souvient du dernier caractère
         lastChar = type;
         wasCharChainFlag = isCharChainFlag;
