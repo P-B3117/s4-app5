@@ -106,14 +106,6 @@ public class AnalLex {
                 break;
             case Terminal.CharType.UPPERCASE:
                 System.out.println("UPPERCASE");
-                if (
-                    lastChar == Terminal.CharType.LOWERCASE ||
-                    lastChar == Terminal.CharType.UNDERSCORE ||
-                    lastChar == Terminal.CharType.UPPERCASE
-                ) {
-                    ErreurLex(c);
-                    isCharChainFlag = true;
-                }
                 isCharChainFlag = true;
                 returnVal = false;
                 break;
@@ -128,6 +120,12 @@ public class AnalLex {
                 break;
             case Terminal.CharType.UNDERSCORE:
                 System.out.println("UNDERSCORE");
+                if (
+                    !isCharChainFlag || lastChar == Terminal.CharType.UNDERSCORE
+                ) {
+                    ErreurLex(c);
+                    isCharChainFlag = false;
+                }
                 isCharChainFlag = true;
                 returnVal = false;
                 break;
