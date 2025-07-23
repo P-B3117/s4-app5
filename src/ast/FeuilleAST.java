@@ -2,8 +2,6 @@ package src.ast;
 
 import src.Terminal;
 
-/** @author Ahmed Khoumsi */
-
 /** Classe representant une feuille d'AST
  */
 public class FeuilleAST extends ElemAST {

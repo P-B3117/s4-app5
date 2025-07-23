@@ -1,13 +1,5 @@
 package src;
 
-/**
- * <p>Title: APP6 Compilation</p>
- * <p>Description: Exemples Compilaton</p>
- * <p>Copyright: Copyright (c) 2002</p>
- * <p>Company: UdeS</p>
- * @author rgr
- * @version 1.0
- */
 import java.io.FileInputStream;
 
 /** Classe permettant d'ouvrir et de faire la Lecture d'un fichier

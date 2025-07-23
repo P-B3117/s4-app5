@@ -4,8 +4,6 @@ import src.AnalLex;
 import src.Terminal;
 import src.Writer;
 
-/** @author Ahmed Khoumsi (adapté) */
-
 /** Cette classe effectue l'analyse syntaxique et construit l'AST.
  *  Elle implémente un parser descendant récursif pour des expressions arithmétiques
  *  avec gestion de la priorité et de l'associativité à droite.

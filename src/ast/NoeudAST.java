@@ -2,8 +2,6 @@ package src.ast;
 
 import src.Terminal;
 
-/** @author Ahmed Khoumsi */
-
 /** Classe representant un noeud d'AST
  */
 public class NoeudAST extends ElemAST {
