@@ -41,12 +41,7 @@ public class AnalLex {
       true s'il reste encore au moins un terminal qui n'a pas ete retourne
  */
     public boolean resteTerminal() {
-        if (
-            chaine == null ||
-            chaine.isEmpty() ||
-            chaine.length() == 1 ||
-            chaine.charAt(0) == '\n'
-        ) {
+        if (chaine == null || chaine.isEmpty() || chaine.charAt(0) == '\n') {
             return false;
         }
         return true;
